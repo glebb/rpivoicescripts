@@ -18,13 +18,34 @@ PLAYLISTS.pop()
 starred = PLAYLISTS.pop()
 PLAYLISTS.insert(0, starred)
 
+with open('ui_input.txt', 'w') as fd:
+    fd.write("...Executing...")
+
+
+def get_mpc_status():
+    status = subprocess.check_output(['mpc', 'status']).split('\n')[0]
+    if not status.startswith('volume:'):
+        return status
+    else: 
+        return "NO AUDIO"
+
+def get_stream_status():
+    status = subprocess.check_output(['ps', 'aux']).split('\n')
+    for line in status:
+        if "mplayer" in line:
+            return 'STREAM: ' + STREAMS.keys()[STREAMS.values().index(line.split(' ')[-1])]
+            #return line.split(' ')[-1]
+    return "NO AUDIO"
+
+
+
 def get_stream_uri(target):
     try:
         return STREAMS[target]
     except:
         return None
 
-def main(mode, target, action=None):
+def main(mode, target, action=None):    
     if mode == 'spotify':
         os.system('pkill mplayer')
         if action == 'play':
@@ -42,18 +63,26 @@ def main(mode, target, action=None):
             os.system('mpc next')
         elif action == 'prev':
             os.system('mpc prev')
+        elif action == 'random':
+            os.system('mpc random')
+            os.system('mpc next')
+        with open('ui_input.txt', 'w') as fd:
+            fd.write(get_mpc_status())
     elif mode == 'stream':
         stream_uri = get_stream_uri(target)
         if stream_uri:
             os.system('pkill mplayer')
             os.system('mpc stop')
             os.system('mplayer ' + stream_uri + '< /dev/null >/dev/null 2>&1 &')
+        with open('ui_input.txt', 'w') as fd:
+            fd.write(get_stream_status())
+            
     elif mode == 'general':
         if target == 'stop':
             os.system('pkill mplayer')
             os.system('mpc stop')
-    else:
-        pass
+            with open('ui_input.txt', 'w') as fd:
+                fd.write("NO AUDIO")
 
 if __name__ == "__main__":
    import commandline
