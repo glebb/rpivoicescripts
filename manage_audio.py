@@ -18,7 +18,7 @@ PLAYLISTS.pop()
 starred = PLAYLISTS.pop()
 PLAYLISTS.insert(0, starred)
 
-with open('ui_input.txt', 'w') as fd:
+with open('/dev/shm/ui_input.txt', 'w') as fd:
     fd.write("...Executing...")
 
 
@@ -34,7 +34,6 @@ def get_stream_status():
     for line in status:
         if "mplayer" in line:
             return 'STREAM: ' + STREAMS.keys()[STREAMS.values().index(line.split(' ')[-1])]
-            #return line.split(' ')[-1]
     return "NO AUDIO"
 
 
@@ -66,23 +65,26 @@ def main(mode, target, action=None):
         elif action == 'random':
             os.system('mpc random')
             os.system('mpc next')
-        with open('ui_input.txt', 'w') as fd:
+        with open('/dev/shm/ui_input.txt', 'w') as fd:
             fd.write(get_mpc_status())
+            fd.close()
     elif mode == 'stream':
         stream_uri = get_stream_uri(target)
         if stream_uri:
             os.system('pkill mplayer')
             os.system('mpc stop')
             os.system('mplayer ' + stream_uri + '< /dev/null >/dev/null 2>&1 &')
-        with open('ui_input.txt', 'w') as fd:
+        with open('/dev/shm/ui_input.txt', 'w') as fd:
             fd.write(get_stream_status())
+            fd.close()
             
     elif mode == 'general':
         if target == 'stop':
             os.system('pkill mplayer')
             os.system('mpc stop')
-            with open('ui_input.txt', 'w') as fd:
+            with open('/dev/shm/ui_input.txt', 'w') as fd:
                 fd.write("NO AUDIO")
+                fd.close()
 
 if __name__ == "__main__":
    import commandline

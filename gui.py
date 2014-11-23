@@ -3,6 +3,7 @@ import os
 import time
 from threading import Thread
 
+
 palette = [
     ('banner', 'black,bold,standout', 'light gray'),
     ('streak', 'black', 'dark red'),
@@ -22,19 +23,30 @@ loop = urwid.MainLoop(map2, palette, unhandled_input=exit_on_q)
 loop.running = True
 
 def draw_ui(text):
-    txt.set_text(('banner',' ' + text + ' '))
+    if txt.get_text != text:
+        txt.set_text(('banner',' ' + text + ' '))
 
 pipe = loop.watch_pipe(draw_ui)
 
-def myfunc(pipe, loop):
+def myfunc(pipe):
+    count = 0
+    last = ""
     while loop.running:
-        fd = open('ui_input.txt', 'r')
+        time.sleep(1.5)
+        fd = open('/dev/shm/ui_input.txt', 'r')
         text = fd.read().strip()
         fd.close()
         os.write(int(pipe), text)
-        time.sleep(1)
+        if text == 'ERROR' or text.startswith('...'):
+            count = count + 1
+        else:
+            last = text
+        if count >= 3:
+            count = 0
+            text = last
+            with open('/dev/shm/ui_input.txt', 'w') as fd:
+                fd.write(text)
 
-t = Thread(target=myfunc, args=(str(pipe), loop))
+t = Thread(target=myfunc, args=(str(pipe)))
 t.start()
-time.sleep(1)
 loop.run()
